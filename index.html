@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AYUSH PUSHUP COUNTER - MediaPipe Tracker</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.waves.min.js"></script>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex flex-col">
+    <div id="vanta-bg" class="fixed inset-0 -z-10"></div>
+
+    <header class="bg-gray-800 bg-opacity-80 backdrop-blur-md py-4 px-6 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold flex items-center">
+                <i data-feather="activity" class="mr-2 text-purple-500"></i>
+                PushUp <span class="text-purple-500">Counter</span>
+            </h1>
+            <div class="flex space-x-4">
+                <button id="theme-toggle" class="p-2 rounded-full bg-gray-700 hover:bg-gray-600 transition">
+                    <i data-feather="moon"></i>
+                </button>
+                <button id="help-btn" class="p-2 rounded-full bg-purple-600 hover:bg-purple-500 transition">
+                    <i data-feather="help-circle"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow container mx-auto px-4 py-8 flex flex-col items-center">
+        <div class="bg-gray-800 bg-opacity-70 rounded-2xl p-6 mb-8 w-full max-w-2xl text-center backdrop-blur-sm border border-gray-700 shadow-xl">
+            <h2 class="text-xl mb-2 text-gray-300">Push-Up Count</h2>
+            <div id="counter" class="text-8xl font-bold text-purple-400 mb-4">0</div>
+            
+            <div class="flex justify-center space-x-8 mb-6">
+                <div class="text-center">
+                    <div class="text-2xl font-mono" id="timer">00:00:00</div>
+                    <div class="text-gray-400 text-sm">Workout Time</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-mono" id="ppm">0</div>
+                    <div class="text-gray-400 text-sm">PPM</div>
+                </div>
+            </div>
+            
+            <div class="flex justify-center space-x-4">
+                <button id="start-btn" class="px-6 py-3 bg-green-600 hover:bg-green-500 rounded-full font-medium flex items-center transition">
+                    <i data-feather="play" class="mr-2"></i> Start
+                </button>
+                <button id="stop-btn" disabled class="px-6 py-3 bg-red-600 hover:bg-red-500 rounded-full font-medium flex items-center transition opacity-50">
+                    <i data-feather="pause" class="mr-2"></i> Stop
+                </button>
+                <button id="reset-btn" class="px-6 py-3 bg-gray-600 hover:bg-gray-500 rounded-full font-medium flex items-center transition">
+                    <i data-feather="rotate-ccw" class="mr-2"></i> Reset
+                </button>
+            </div>
+        </div>
+
+        <div class="relative w-full max-w-4xl aspect-video bg-black rounded-xl overflow-hidden border-2 border-gray-700 shadow-lg">
+            <video id="camera-feed" class="w-full h-full object-cover" autoplay playsinline></video>
+            <canvas id="pose-canvas" class="absolute inset-0 w-full h-full"></canvas>
+            
+            <div id="form-feedback" class="absolute top-4 right-4 flex items-center hidden">
+                <div id="form-dot" class="w-4 h-4 rounded-full form-dot mr-2"></div>
+                <span id="form-message" class="text-sm font-medium"></span>
+            </div>
+            <div id="angle-indicator" class="absolute bottom-4 left-4 bg-gray-800 bg-opacity-70 px-3 py-2 rounded-full angle-indicator hidden">
+                <span class="text-sm">Elbow Angle: <span id="angle-value" class="font-mono">0</span>°</span>
+            </div>
+        </div>
+
+        <div class="mt-8 bg-gray-800 bg-opacity-70 rounded-xl p-6 w-full max-w-4xl backdrop-blur-sm border border-gray-700">
+             <h3 class="text-xl font-bold mb-4 flex items-center">
+                <i data-feather="info" class="mr-2 text-purple-500"></i> Form Tips
+             </h3>
+             <ul class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <li class="flex items-start">
+                    <i data-feather="check-circle" class="text-green-400 mr-2 mt-1"></i>
+                    <span>Keep your body straight from head to heels</span>
+                </li>
+                <li class="flex items-start">
+                    <i data-feather="check-circle" class="text-green-400 mr-2 mt-1"></i>
+                    <span>Lower until elbows are at 90° angles</span>
+                </li>
+                <li class="flex items-start">
+                    <i data-feather="check-circle" class="text-green-400 mr-2 mt-1"></i>
+                    <span>Push up until arms are fully extended</span>
+                </li>
+                <li class="flex items-start">
+                    <i data-feather="check-circle" class="text-green-400 mr-2 mt-1"></i>
+                    <span>Keep elbows close to your body</span>
+                </li>
+             </ul>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 bg-opacity-80 py-4 px-6 backdrop-blur-md">
+        <div class="container mx-auto text-center text-gray-400 text-sm">
+            <p>PushUp Counter © 2025 - Your personalized counter</p>
+        </div>
+    </footer>
+
+    <audio id="count-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-positive-interface-beep-221.mp3"></audio>
+    <script src="script.js"></script>
+</body>
+</html>

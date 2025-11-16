@@ -1,0 +1,22 @@
+/* styles.css */
+
+/* Dot shadow for form feedback */
+.form-dot {
+    box-shadow: 0 0 20px currentColor;
+}
+
+/* Flip video horizontally for mirror effect */
+#camera-feed {
+    transform: scaleX(-1);
+}
+
+/* Smooth transition for angle indicator */
+.angle-indicator {
+    transition: all 0.3s ease; 
+}
+
+/* Hides the original video element when MediaPipe starts drawing on canvas */
+.video-hidden {
+    visibility: hidden;
+    position: absolute;
+}
