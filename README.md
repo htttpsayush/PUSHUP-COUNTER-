@@ -7,13 +7,13 @@
 <br/>
 
 <img src="https://img.shields.io/badge/STATUS-LIVE-00d4ff?style=for-the-badge&labelColor=0a0a0a" />
-<img src="https://img.shields.io/badge/VERSION-1.0.0_BASIC-3b82f6?style=for-the-badge&labelColor=0a0a0a" />
+<img src="https://img.shields.io/badge/VERSION-1.0.0-3b82f6?style=for-the-badge&labelColor=0a0a0a" />
 <img src="https://img.shields.io/badge/AI-MediaPipe_Pose-6366f1?style=for-the-badge&labelColor=0a0a0a" />
 <img src="https://img.shields.io/badge/PART_OF-FitAI_Suite-22d3a5?style=for-the-badge&labelColor=0a0a0a" />
 
 <br/><br/>
 
-**[🧪 Basic Version](https://pushup-counter-psi.vercel.app/)** &nbsp;·&nbsp; **[✨ Current Version — Live](https://pushup-counter-nine.vercel.app/)** &nbsp;·&nbsp; **[🗺️ Roadmap](#-roadmap--part-of-something-bigger)**
+**[🚀 Live Demo](https://pushup-counter-nine.vercel.app/)** &nbsp;·&nbsp; **[🗺️ Roadmap](#-roadmap--part-of-something-bigger)**
 
 <br/>
 
@@ -25,11 +25,7 @@
 
 **PushUp Counter** is a browser-based fitness tracker that uses your webcam and AI pose detection to automatically count push-up repetitions in real time — no hardware, no app install, just open and go.
 
-> ⚠️ **Note:** This repo contains **two versions:**
-> - 🧪 **Basic v1.0** — the original MVP ([live here](https://pushup-counter-psi.vercel.app/))
-> - ✨ **Current version** — redesigned Glassmorphism UI with Electric Blue theme ([live here](https://pushup-counter-nine.vercel.app/))
->
-> Both are **Module 1** of a much larger fitness application in progress. See the [Roadmap](#-roadmap--part-of-something-bigger).
+> 🚧 **Note:** This is **Module 1** of a complete AI-powered fitness application I'm building. This is just the beginning — see the [Roadmap](#-roadmap--part-of-something-bigger) for what's coming next.
 
 ---
 
@@ -50,10 +46,7 @@
 
 ## 🖥️ Demo
 
-| Version | Link | Status |
-|---|---|---|
-| 🧪 **Basic v1.0** | [https://pushup-counter-psi.vercel.app/](https://pushup-counter-psi.vercel.app/) | ✅ Live |
-| ✨ **Current (Glassmorphism UI)** | [https://pushup-counter-nine.vercel.app/](https://pushup-counter-nine.vercel.app/) | ✅ Live |
+🔗 **Live:** [https://pushup-counter-nine.vercel.app/](https://pushup-counter-nine.vercel.app/)
 
 > Works best in **Google Chrome** or **Edge** on desktop. Allow camera permission when prompted.
 
@@ -88,17 +81,16 @@ The counter uses a **two-phase state machine** to avoid false positives:
 ## 🚀 Getting Started
 
 ### Option 1 — Use Live Demo
-- 🧪 **Basic version:** [https://pushup-counter-psi.vercel.app/](https://pushup-counter-psi.vercel.app/)
-- ✨ **Current version (Glassmorphism UI):** [https://pushup-counter-nine.vercel.app/](https://pushup-counter-nine.vercel.app/)
+Just visit **[https://pushup-counter-nine.vercel.app/](https://pushup-counter-nine.vercel.app/)** — no setup needed.
 
 ### Option 2 — Run Locally
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/httpsayush/pushup-counter.git
+git clone https://github.com/httpsayush/PUSHUP-COUNTER-.git
 
 # 2. Navigate to project folder
-cd pushup-counter
+cd PUSHUP-COUNTER-
 
 # 3. Open with any local server (e.g. VS Code Live Server)
 #    OR use Python's built-in server:
@@ -115,7 +107,7 @@ python -m http.server 8080
 ## 📁 Project Structure
 
 ```
-pushup-counter/
+PUSHUP-COUNTER-/
 │
 ├── index.html      # App layout & structure
 ├── styles.css      # Glassmorphism UI — CSS variables, animations
@@ -227,6 +219,6 @@ Distributed under the **MIT License**. See `LICENSE` for more information.
 
 <br/>
 
-*PushUp Counter v1.0 — Module 1 of the upcoming FitAI Suite*
+*PushUp Counter — Module 1 of the upcoming FitAI Suite*
 
 </div>
