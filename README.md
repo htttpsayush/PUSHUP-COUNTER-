@@ -13,7 +13,7 @@
 
 <br/><br/>
 
-**[🧪 Basic Version — Live](https://pushup-counter-psi.vercel.app/)** &nbsp;·&nbsp; **[✨ Current Version — Coming Soon](#)** &nbsp;·&nbsp; **[🗺️ Roadmap](#-roadmap--part-of-something-bigger)**
+**[🧪 Basic Version](https://pushup-counter-psi.vercel.app/)** &nbsp;·&nbsp; **[✨ Current Version — Live](https://pushup-counter-nine.vercel.app/)** &nbsp;·&nbsp; **[🗺️ Roadmap](#-roadmap--part-of-something-bigger)**
 
 <br/>
 
@@ -27,7 +27,7 @@
 
 > ⚠️ **Note:** This repo contains **two versions:**
 > - 🧪 **Basic v1.0** — the original MVP ([live here](https://pushup-counter-psi.vercel.app/))
-> - ✨ **Current version** — redesigned Glassmorphism UI with Electric Blue theme *(deploying soon)*
+> - ✨ **Current version** — redesigned Glassmorphism UI with Electric Blue theme ([live here](https://pushup-counter-nine.vercel.app/))
 >
 > Both are **Module 1** of a much larger fitness application in progress. See the [Roadmap](#-roadmap--part-of-something-bigger).
 
@@ -53,7 +53,7 @@
 | Version | Link | Status |
 |---|---|---|
 | 🧪 **Basic v1.0** | [https://pushup-counter-psi.vercel.app/](https://pushup-counter-psi.vercel.app/) | ✅ Live |
-| ✨ **Current (Glassmorphism UI)** | _Deploying soon..._ | 🔜 Coming |
+| ✨ **Current (Glassmorphism UI)** | [https://pushup-counter-nine.vercel.app/](https://pushup-counter-nine.vercel.app/) | ✅ Live |
 
 > Works best in **Google Chrome** or **Edge** on desktop. Allow camera permission when prompted.
 
@@ -89,7 +89,7 @@ The counter uses a **two-phase state machine** to avoid false positives:
 
 ### Option 1 — Use Live Demo
 - 🧪 **Basic version:** [https://pushup-counter-psi.vercel.app/](https://pushup-counter-psi.vercel.app/)
-- ✨ **Current version (Glassmorphism UI):** _Coming soon_
+- ✨ **Current version (Glassmorphism UI):** [https://pushup-counter-nine.vercel.app/](https://pushup-counter-nine.vercel.app/)
 
 ### Option 2 — Run Locally
 
