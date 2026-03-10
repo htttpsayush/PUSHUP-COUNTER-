@@ -1,0 +1,39 @@
+name: 🔥 Daily Auto Commit
+
+on:
+  schedule:
+    # Har roz 7:00 AM IST = 1:30 AM UTC
+    - cron: '30 1 * * *'
+  workflow_dispatch: # Manual trigger bhi kar sakte ho GitHub se
+
+jobs:
+  auto-commit:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Repo ko checkout karo
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 2: Git user config set karo
+      - name: ⚙️ Configure Git
+        run: |
+          git config --global user.name "httpsayush"
+          git config --global user.email "ac.ayush2007@gmail.com"
+
+      # Step 3: Activity log file update karo with today's date/time IST
+      - name: 📝 Update Activity Log
+        run: |
+          mkdir -p .github
+          echo "🏋️ PushUp Counter — Last Active: $(TZ='Asia/Kolkata' date '+%A, %d %B %Y at %I:%M %p IST')" > .github/activity.md
+          echo "" >> .github/activity.md
+          echo "⚡ Auto-maintained by GitHub Actions" >> .github/activity.md
+
+      # Step 4: Commit aur push karo (sirf agar changes hain toh)
+      - name: 🚀 Commit and Push
+        run: |
+          git add .github/activity.md
+          git diff --staged --quiet || git commit -m "⚡ Daily sync — $(TZ='Asia/Kolkata' date '+%d %b %Y')"
+          git push origin main
