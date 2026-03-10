@@ -1,113 +1,178 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AYUSH PUSHUP COUNTER - MediaPipe Tracker</title>
+    <title>PushUp Counter</title>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/feather-icons"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.waves.min.js"></script>
-
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-gray-900 text-white min-h-screen flex flex-col">
-    <div id="vanta-bg" class="fixed inset-0 -z-10"></div>
+<body>
 
-    <header class="bg-gray-800 bg-opacity-80 backdrop-blur-md py-4 px-6 shadow-lg">
-        <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-bold flex items-center">
-                <i data-feather="activity" class="mr-2 text-purple-500"></i>
-                PushUp <span class="text-purple-500">Counter</span>
-            </h1>
-            <div class="flex space-x-4">
-                <button id="theme-toggle" class="p-2 rounded-full bg-gray-700 hover:bg-gray-600 transition">
-                    <i data-feather="moon"></i>
-                </button>
-                <button id="help-btn" class="p-2 rounded-full bg-purple-600 hover:bg-purple-500 transition">
-                    <i data-feather="help-circle"></i>
-                </button>
+    <!-- Animated mesh background -->
+    <div class="bg-scene">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+        <div class="grid-overlay"></div>
+    </div>
+
+    <!-- ── HEADER ── -->
+    <header class="header">
+        <div class="logo">
+            <div class="logo-pulse"></div>
+            <span class="logo-text">PUSH<em>UP</em></span>
+        </div>
+        <div class="header-right">
+            <button id="help-btn" class="glass-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                How it works
+            </button>
+            <div class="ai-chip">
+                <span class="ai-dot"></span>
+                AI Tracking
             </div>
         </div>
     </header>
 
-    <main class="flex-grow container mx-auto px-4 py-8 flex flex-col items-center">
-        <div class="bg-gray-800 bg-opacity-70 rounded-2xl p-6 mb-8 w-full max-w-2xl text-center backdrop-blur-sm border border-gray-700 shadow-xl">
-            <h2 class="text-xl mb-2 text-gray-300">Push-Up Count</h2>
-            <div id="counter" class="text-8xl font-bold text-purple-400 mb-4">0</div>
-            
-            <div class="flex justify-center space-x-8 mb-6">
-                <div class="text-center">
-                    <div class="text-2xl font-mono" id="timer">00:00:00</div>
-                    <div class="text-gray-400 text-sm">Workout Time</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-2xl font-mono" id="ppm">0</div>
-                    <div class="text-gray-400 text-sm">PPM</div>
-                </div>
-            </div>
-            
-            <div class="flex justify-center space-x-4">
-                <button id="start-btn" class="px-6 py-3 bg-green-600 hover:bg-green-500 rounded-full font-medium flex items-center transition">
-                    <i data-feather="play" class="mr-2"></i> Start
-                </button>
-                <button id="stop-btn" disabled class="px-6 py-3 bg-red-600 hover:bg-red-500 rounded-full font-medium flex items-center transition opacity-50">
-                    <i data-feather="pause" class="mr-2"></i> Stop
-                </button>
-                <button id="reset-btn" class="px-6 py-3 bg-gray-600 hover:bg-gray-500 rounded-full font-medium flex items-center transition">
-                    <i data-feather="rotate-ccw" class="mr-2"></i> Reset
-                </button>
-            </div>
-        </div>
+    <!-- ── MAIN ── -->
+    <main class="layout">
 
-        <div class="relative w-full max-w-4xl aspect-video bg-black rounded-xl overflow-hidden border-2 border-gray-700 shadow-lg">
-            <video id="camera-feed" class="w-full h-full object-cover" autoplay playsinline></video>
-            <canvas id="pose-canvas" class="absolute inset-0 w-full h-full"></canvas>
-            
-            <div id="form-feedback" class="absolute top-4 right-4 flex items-center hidden">
-                <div id="form-dot" class="w-4 h-4 rounded-full form-dot mr-2"></div>
-                <span id="form-message" class="text-sm font-medium"></span>
-            </div>
-            <div id="angle-indicator" class="absolute bottom-4 left-4 bg-gray-800 bg-opacity-70 px-3 py-2 rounded-full angle-indicator hidden">
-                <span class="text-sm">Elbow Angle: <span id="angle-value" class="font-mono">0</span>°</span>
-            </div>
-        </div>
+        <!-- LEFT: controls -->
+        <aside class="panel-left">
 
-        <div class="mt-8 bg-gray-800 bg-opacity-70 rounded-xl p-6 w-full max-w-4xl backdrop-blur-sm border border-gray-700">
-             <h3 class="text-xl font-bold mb-4 flex items-center">
-                <i data-feather="info" class="mr-2 text-purple-500"></i> Form Tips
-             </h3>
-             <ul class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <li class="flex items-start">
-                    <i data-feather="check-circle" class="text-green-400 mr-2 mt-1"></i>
-                    <span>Keep your body straight from head to heels</span>
-                </li>
-                <li class="flex items-start">
-                    <i data-feather="check-circle" class="text-green-400 mr-2 mt-1"></i>
-                    <span>Lower until elbows are at 90° angles</span>
-                </li>
-                <li class="flex items-start">
-                    <i data-feather="check-circle" class="text-green-400 mr-2 mt-1"></i>
-                    <span>Push up until arms are fully extended</span>
-                </li>
-                <li class="flex items-start">
-                    <i data-feather="check-circle" class="text-green-400 mr-2 mt-1"></i>
-                    <span>Keep elbows close to your body</span>
-                </li>
-             </ul>
-        </div>
+            <!-- Big rep counter -->
+            <div class="glass-card card-counter">
+                <p class="label">SESSION REPS</p>
+                <div class="counter-wrap">
+                    <span id="counter" class="counter-num">0</span>
+                    <div class="counter-ring">
+                        <svg viewBox="0 0 100 100">
+                            <circle class="cr-bg" cx="50" cy="50" r="44"/>
+                            <circle id="cr-fill" class="cr-fill" cx="50" cy="50" r="44"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="goal-line">Goal: <strong id="goal-val">20</strong> reps &nbsp;·&nbsp; <span id="ring-pct">0%</span></p>
+            </div>
+
+            <!-- Stats strip -->
+            <div class="stats-strip">
+                <div class="stat-box">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span id="timer" class="sv">00:00</span>
+                    <span class="sl">Time</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-box">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    <span id="ppm" class="sv">0</span>
+                    <span class="sl">RPM</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-box">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+                    <span id="streak" class="sv">0</span>
+                    <span class="sl">Best</span>
+                </div>
+            </div>
+
+            <!-- Angle card -->
+            <div class="glass-card card-angle">
+                <div class="angle-top">
+                    <p class="label">ELBOW ANGLE</p>
+                    <div id="phase-tag" class="phase-tag">IDLE</div>
+                </div>
+                <div class="angle-display">
+                    <span id="angle-num" class="angle-num">—</span>
+                    <span class="angle-deg">°</span>
+                </div>
+                <!-- Segmented bar -->
+                <div class="seg-bar">
+                    <div class="seg seg-red">   <span>0°</span></div>
+                    <div class="seg seg-yellow"><span>90°</span></div>
+                    <div class="seg seg-green"> <span>160°</span></div>
+                    <div id="angle-cursor" class="angle-cursor"></div>
+                </div>
+                <div class="seg-labels">
+                    <span>Bent</span><span>Mid</span><span>Extended</span>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls">
+                <button id="start-btn" class="btn-start">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    Start Session
+                </button>
+                <div class="btn-row">
+                    <button id="stop-btn" class="btn-stop" disabled>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                        Pause
+                    </button>
+                    <button id="reset-btn" class="btn-reset">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.53"/></svg>
+                        Reset
+                    </button>
+                </div>
+            </div>
+
+        </aside>
+
+        <!-- RIGHT: camera -->
+        <section class="panel-right">
+
+            <div class="camera-frame">
+                <video id="camera-feed" autoplay playsinline></video>
+                <canvas id="pose-canvas"></canvas>
+
+                <!-- Status bar -->
+                <div class="cam-topbar">
+                    <div id="live-chip" class="live-chip chip-off">
+                        <span class="live-dot"></span>
+                        <span id="live-text">OFFLINE</span>
+                    </div>
+                    <div id="feedback-pill" class="feedback-pill hidden"></div>
+                </div>
+
+                <!-- Idle screen -->
+                <div id="idle-screen" class="idle-screen">
+                    <div class="idle-icon">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                    </div>
+                    <p class="idle-title">Camera Ready</p>
+                    <p class="idle-sub">Press <strong>Start Session</strong> to begin</p>
+                </div>
+            </div>
+
+            <!-- Tips -->
+            <div class="tips-grid">
+                <div class="tip-card">
+                    <span class="tip-n">01</span>
+                    <span class="tip-t">Stand sideways — full arm visible</span>
+                </div>
+                <div class="tip-card">
+                    <span class="tip-n">02</span>
+                    <span class="tip-t">Lower until elbow hits 90°</span>
+                </div>
+                <div class="tip-card">
+                    <span class="tip-n">03</span>
+                    <span class="tip-t">Extend to 160°+ to count rep</span>
+                </div>
+                <div class="tip-card">
+                    <span class="tip-n">04</span>
+                    <span class="tip-t">Good lighting = better tracking</span>
+                </div>
+            </div>
+
+        </section>
     </main>
 
-    <footer class="bg-gray-800 bg-opacity-80 py-4 px-6 backdrop-blur-md">
-        <div class="container mx-auto text-center text-gray-400 text-sm">
-            <p>PushUp Counter © 2025 - Your personalized counter</p>
-        </div>
-    </footer>
-
-    <audio id="count-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-positive-interface-beep-221.mp3"></audio>
+    <audio id="count-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-positive-interface-beep-221.mp3" preload="auto"></audio>
     <script src="script.js"></script>
 </body>
 </html>

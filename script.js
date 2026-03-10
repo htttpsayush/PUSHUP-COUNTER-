@@ -1,101 +1,104 @@
-// script.js
+// =============================================================
+//  script.js — PushUp Counter (Glassmorphism UI)
+// =============================================================
 
-// --- VARIABLES & SETUP ---
-let pushUpCount = 0;
-let isDownPosition = false; // State variable for counting
-let isCounting = false; // Control flag for start/stop
+// ── State ────────────────────────────────────────────────────
+let pushUpCount      = 0;
+let bestSet          = 0;       // Highest single session count
+let isDownPosition   = false;
+let isCounting       = false;
+const GOAL           = 20;
 
-// Timer variables
-let startTime = null;
-let timerInterval = null;
+let startTime          = null;
+let timerInterval      = null;
 let totalPauseDuration = 0;
-let pauseStart = null;
-let mpCamera = null;
-let isCameraRunning = false;
+let pauseStart         = null;
+let mpCamera           = null;
+let isCameraRunning    = false;
 
-// DOM Elements
-const video = document.getElementById('camera-feed'); 
-const canvas = document.getElementById('pose-canvas'); 
-const ctx = canvas.getContext('2d');
-const counterElement = document.getElementById('counter');
-const startBtn = document.getElementById('start-btn');
-const stopBtn = document.getElementById('stop-btn');
-const resetBtn = document.getElementById('reset-btn');
-const timerElement = document.getElementById('timer');
-const ppmElement = document.getElementById('ppm');
-const angleIndicator = document.getElementById('angle-indicator');
-const angleValue = document.getElementById('angle-value');
-const formFeedback = document.getElementById('form-feedback');
-const formDot = document.getElementById('form-dot');
-const formMessage = document.getElementById('form-message');
-const countSound = document.getElementById('count-sound');
+const MIN_DOWN_ANGLE = 90;
+const MIN_UP_ANGLE   = 160;
+const RING_CIRC      = 2 * Math.PI * 44; // r=44 → 276.5
 
-// --- Initialization (Vanta.js and Feather Icons) ---
-VANTA.WAVES({
-    el: "#vanta-bg",
-    mouseControls: true,
-    touchControls: true,
-    gyroControls: false,
-    minHeight: 200.00,
-    minWidth: 200.00,
-    scale: 1.00,
-    scaleMobile: 1.00,
-    color: 0x2b1b3a,
-    shininess: 35.00,
-    waveHeight: 15.00,
-    waveSpeed: 0.75,
-    zoom: 0.85
-});
-feather.replace();
+// ── DOM ──────────────────────────────────────────────────────
+const video         = document.getElementById('camera-feed');
+const canvas        = document.getElementById('pose-canvas');
+const ctx           = canvas.getContext('2d');
+const counterEl     = document.getElementById('counter');
+const timerEl       = document.getElementById('timer');
+const ppmEl         = document.getElementById('ppm');
+const streakEl      = document.getElementById('streak');
+const angleNumEl    = document.getElementById('angle-num');
+const angleCursorEl = document.getElementById('angle-cursor');
+const phaseTagEl    = document.getElementById('phase-tag');
+const crFillEl      = document.getElementById('cr-fill');
+const ringPctEl     = document.getElementById('ring-pct');
+const liveChipEl    = document.getElementById('live-chip');
+const liveTextEl    = document.getElementById('live-text');
+const feedbackEl    = document.getElementById('feedback-pill');
+const idleScreen    = document.getElementById('idle-screen');
+const cameraFrame   = document.querySelector('.camera-frame');
+const startBtn      = document.getElementById('start-btn');
+const stopBtn       = document.getElementById('stop-btn');
+const resetBtn      = document.getElementById('reset-btn');
+const countSound    = document.getElementById('count-sound');
 
-// --- CORE LOGIC FUNCTIONS ---
+// ── UI Helpers ───────────────────────────────────────────────
 
-/**
- * Helper function to calculate the angle between three points (a, b, c).
- */
-function calculateAngle(a, b, c) {
-    const radians = Math.atan2(c.y - b.y, c.x - b.x) -
-                    Math.atan2(a.y - b.y, a.x - b.x);
-    let angle = Math.abs(radians * 180.0 / Math.PI);
-    
-    if (angle > 180.0) {
-        angle = 360 - angle;
-    }
-    return angle;
+function setLiveChip(state, label) {
+    // state: 'off' | 'live' | 'paused'
+    liveChipEl.className = `live-chip chip-${state}`;
+    liveTextEl.textContent = label;
 }
 
-// Simple feedback function
-function showFormFeedback(type, message) {
-    formFeedback.classList.remove('hidden');
-    formMessage.textContent = message;
-
-    formDot.classList.remove('bg-green-500', 'bg-red-500', 'bg-yellow-500');
-
-    if (type === 'good') {
-        formDot.classList.add('bg-green-500');
-        formDot.style.boxShadow = '0 0 20px #10b981'; 
-    } else if (type === 'bad') {
-        formDot.classList.add('bg-red-500');
-        formDot.style.boxShadow = '0 0 20px #ef4444';
-    } else { // neutral/error
-        formDot.classList.add('bg-yellow-500');
-        formDot.style.boxShadow = '0 0 20px #f59e0b';
-    }
+function setFeedback(type, msg) {
+    // type: '' | 'good' | 'warn' | 'info'
+    if (!msg) { feedbackEl.classList.add('hidden'); return; }
+    feedbackEl.classList.remove('hidden', 'good', 'warn', 'info');
+    feedbackEl.textContent = msg;
+    if (type) feedbackEl.classList.add(type);
 }
 
-// Timer functions
+function setPhase(cls, label) {
+    phaseTagEl.className = `phase-tag ${cls}`;
+    phaseTagEl.textContent = label;
+}
+
+function setAngleUI(angle) {
+    if (angle === null) {
+        angleNumEl.textContent = '—';
+        angleCursorEl.style.left = '0%';
+        return;
+    }
+    angleNumEl.textContent = Math.round(angle);
+    // Map 0–180° to 0–100% cursor position
+    const pct = Math.min(angle / 180 * 100, 100);
+    angleCursorEl.style.left = `calc(${pct}% - 2px)`;
+}
+
+function updateRing() {
+    const pct    = Math.min(pushUpCount / GOAL, 1);
+    const offset = RING_CIRC * (1 - pct);
+    crFillEl.style.strokeDashoffset = offset;
+    ringPctEl.textContent = `${Math.round(pct * 100)}%`;
+}
+
+function popCounter() {
+    counterEl.classList.remove('pop');
+    void counterEl.offsetWidth;
+    counterEl.classList.add('pop');
+    setTimeout(() => counterEl.classList.remove('pop'), 200);
+}
+
+// ── Timer ────────────────────────────────────────────────────
+
 function updateTimer() {
-    const elapsedTime = Date.now() - startTime - totalPauseDuration;
-    const totalSeconds = Math.floor(elapsedTime / 1000);
-    const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
-    const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
-    const seconds = String(totalSeconds % 60).padStart(2, '0');
-    timerElement.textContent = `${hours}:${minutes}:${seconds}`;
-
-    if (totalSeconds > 0) {
-        const ppm = Math.round((pushUpCount / totalSeconds) * 60);
-        ppmElement.textContent = ppm;
-    }
+    const ms   = Date.now() - startTime - totalPauseDuration;
+    const secs = Math.floor(ms / 1000);
+    const m    = String(Math.floor(secs / 60)).padStart(2, '0');
+    const s    = String(secs % 60).padStart(2, '0');
+    timerEl.textContent = `${m}:${s}`;
+    if (secs > 0) ppmEl.textContent = Math.round((pushUpCount / secs) * 60);
 }
 
 function startTimer() {
@@ -110,217 +113,209 @@ function startTimer() {
 
 function stopTimer() {
     clearInterval(timerInterval);
-    pauseStart = Date.now(); 
+    pauseStart = Date.now();
 }
 
-// --- MEDIAPIPE SETUP & PUSH-UP COUNTING ---
+// ── MediaPipe ────────────────────────────────────────────────
 
-// 1. Initialize MediaPipe Pose
-const mpPose = new Pose({locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${f}`});
+function calcAngle(a, b, c) {
+    const r = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
+    let angle = Math.abs(r * 180 / Math.PI);
+    if (angle > 180) angle = 360 - angle;
+    return angle;
+}
+
+const mpPose = new Pose({
+    locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${f}`
+});
 mpPose.setOptions({
-    modelComplexity: 1, 
-    smoothLandmarks: true, 
-    minDetectionConfidence: 0.5, 
+    modelComplexity: 1,
+    smoothLandmarks: true,
+    minDetectionConfidence: 0.5,
     minTrackingConfidence: 0.5
 });
 
-// 2. The main processing loop function
-function onResults(results) {
+mpPose.onResults(results => {
+    // Draw mirrored frame
     ctx.save();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Flip canvas to mirror video
     ctx.translate(canvas.width, 0);
     ctx.scale(-1, 1);
     ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
     ctx.restore();
 
-    if (results.poseLandmarks) {
-        // Draw landmarks
-        drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, {color: '#8b5cf6', lineWidth: 2});
-        drawLandmarks(ctx, results.poseLandmarks, {color: '#ff007f', lineWidth: 2, radius: 5});
+    if (!results.poseLandmarks) return;
 
-        if (isCounting) {
-            // Get landmarks for Right Arm: Shoulder (12), Elbow (14), and Wrist (16)
-            const s = results.poseLandmarks[12];
-            const e = results.poseLandmarks[14];
-            const w = results.poseLandmarks[16];
-            
-            // Visibility Check
-            if (s.visibility < 0.5 || e.visibility < 0.5 || w.visibility < 0.5) {
-                showFormFeedback('error', 'Cannot clearly see arm joints. Adjust camera/lighting.');
-                angleIndicator.classList.add('hidden');
-                return;
-            }
-            
-            const elbowAngle = calculateAngle(s, e, w);
-            
-            angleIndicator.classList.remove('hidden');
-            angleValue.textContent = Math.round(elbowAngle);
-            showFormFeedback('neutral', 'Tracking Elbow...');
+    // Draw skeleton — blue tones to match UI
+    drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, {
+        color: 'rgba(96,165,250,0.45)', lineWidth: 2
+    });
+    drawLandmarks(ctx, results.poseLandmarks, {
+        color: '#3B82F6', lineWidth: 1, radius: 4
+    });
 
-            // *** PUSH-UP COUNTING LOGIC ***
-            const MIN_DOWN_ANGLE = 90; // Depth hit threshold
-            const MIN_UP_ANGLE = 160; // Rep completion threshold
-            
-            if (elbowAngle < MIN_DOWN_ANGLE) { 
-                isDownPosition = true;
-                showFormFeedback('good', 'DOWN: Go up now!');
-            } 
-            
-            if (isDownPosition && elbowAngle > MIN_UP_ANGLE) {
-                pushUpCount++;
-                counterElement.textContent = pushUpCount;
-                isDownPosition = false; // Reset state
-                countSound.play();
-                showFormFeedback('good', 'Counted! Rep completed.');
-            }
+    if (!isCounting) return;
+
+    const shoulder = results.poseLandmarks[12]; // Right shoulder
+    const elbow    = results.poseLandmarks[14]; // Right elbow
+    const wrist    = results.poseLandmarks[16]; // Right wrist
+
+    if ([shoulder, elbow, wrist].some(j => j.visibility < 0.5)) {
+        setFeedback('warn', '⚠ Arm not visible');
+        setPhase('warn', 'BLOCKED');
+        setAngleUI(null);
+        return;
+    }
+
+    const angle = calcAngle(shoulder, elbow, wrist);
+    setAngleUI(angle);
+
+    // Two-phase rep counting: DOWN → UP = 1 rep
+    if (angle < MIN_DOWN_ANGLE) {
+        isDownPosition = true;
+        setPhase('down', 'DOWN ↓');
+        setFeedback('info', 'Good — now push up!');
+    } else if (isDownPosition && angle > MIN_UP_ANGLE) {
+        pushUpCount++;
+        isDownPosition = false;
+
+        counterEl.textContent = pushUpCount;
+        if (pushUpCount > bestSet) {
+            bestSet = pushUpCount;
+            streakEl.textContent = bestSet;
+        }
+        popCounter();
+        updateRing();
+
+        countSound.currentTime = 0;
+        countSound.play();
+
+        setPhase('counted', `REP ${pushUpCount} ✓`);
+        setFeedback('good', `Rep ${pushUpCount} counted 🔥`);
+    } else {
+        if (!isDownPosition) {
+            setPhase('up', 'UP ↑');
+            setFeedback('', '');
         }
     }
-}
-mpPose.onResults(onResults);
+});
 
+// ── Camera ───────────────────────────────────────────────────
 
-// 3. Camera Setup
 async function initCamera() {
-    if (isCameraRunning) {
-        mpCamera.start();
-        return true;
-    }
-    
+    if (isCameraRunning) { mpCamera.start(); return true; }
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         video.srcObject = stream;
-        
-        await new Promise((resolve) => {
-            video.onloadedmetadata = () => {
-                canvas.width = video.videoWidth; 
-                canvas.height = video.videoHeight;
-                resolve();
-            };
-        });
-        
+        await new Promise(res => { video.onloadedmetadata = () => { canvas.width = video.videoWidth; canvas.height = video.videoHeight; res(); }; });
         mpCamera = new Camera(video, {
-            onFrame: async () => {
-                await mpPose.send({image: video});
-            },
-            width: video.videoWidth,
-            height: video.videoHeight
+            onFrame: async () => { await mpPose.send({ image: video }); },
+            width: video.videoWidth, height: video.videoHeight
         });
-        
         mpCamera.start();
         isCameraRunning = true;
         video.classList.add('video-hidden');
+        idleScreen.style.display = 'none';
+        cameraFrame.classList.add('is-live');
         return true;
-
-    } catch (err) {
-        console.error("Error accessing camera:", err);
-        alert("Could not access camera. Please make sure you've granted camera permissions.");
+    } catch (e) {
+        console.error(e);
+        alert('Camera access denied. Please allow camera permissions.');
         return false;
     }
 }
 
-
-// --- EVENT LISTENERS (Start, Stop, Reset) ---
+// ── Buttons ──────────────────────────────────────────────────
 
 startBtn.addEventListener('click', async () => {
     if (isCounting) return;
-
     isCounting = true;
-    
-    // UI: Initializing
+
     startBtn.disabled = true;
-    stopBtn.disabled = true;
-    startBtn.classList.remove('bg-green-600', 'hover:bg-green-500');
-    startBtn.classList.add('bg-gray-600', 'hover:bg-gray-600');
-    startBtn.innerHTML = '<i data-feather="loader" class="mr-2 animate-spin"></i> Initializing...';
-    feather.replace();
+    stopBtn.disabled  = true;
+    startBtn.innerHTML = `<svg class="spin-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Loading…`;
+    setLiveChip('off', 'STARTING…');
 
-    const cameraSuccess = await initCamera(); 
-
-    if (!cameraSuccess) {
+    const ok = await initCamera();
+    if (!ok) {
         isCounting = false;
-        // UI reset after failure
         startBtn.disabled = false;
-        startBtn.classList.remove('bg-gray-600', 'hover:bg-gray-600');
-        startBtn.classList.add('bg-green-600', 'hover:bg-green-500');
-        startBtn.innerHTML = '<i data-feather="play" class="mr-2"></i> Start';
-        feather.replace();
+        startBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> Start Session`;
+        setLiveChip('off', 'OFFLINE');
         return;
     }
 
     startTimer();
-    
-    // UI: Running
+    setLiveChip('live', 'LIVE');
     stopBtn.disabled = false;
-    stopBtn.classList.remove('opacity-50');
-
-    startBtn.classList.remove('bg-gray-600', 'hover:bg-gray-600');
-    startBtn.classList.add('bg-yellow-600', 'hover:bg-yellow-500');
-    startBtn.innerHTML = '<i data-feather="activity" class="mr-2"></i> Running';
-    feather.replace();
+    startBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> Tracking`;
+    setPhase('up', 'READY');
+    setFeedback('info', 'Stand sideways to camera');
 });
 
 stopBtn.addEventListener('click', () => {
     if (!isCounting) return;
-
     isCounting = false;
     stopTimer();
-    if (mpCamera) {
-        mpCamera.stop();
-    }
-    
-    // UI: Paused
+    if (mpCamera) mpCamera.stop();
+
     startBtn.disabled = false;
-    stopBtn.disabled = true;
-    stopBtn.classList.add('opacity-50');
-    
-    startBtn.classList.add('bg-green-600', 'hover:bg-green-500');
-    startBtn.classList.remove('bg-yellow-600', 'hover:bg-yellow-500');
-    startBtn.innerHTML = '<i data-feather="play" class="mr-2"></i> Resume';
-    feather.replace();
+    stopBtn.disabled  = true;
+    startBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> Resume`;
+    setLiveChip('paused', 'PAUSED');
+    setPhase('', 'PAUSED');
+    setFeedback('warn', 'Session paused');
 });
 
 resetBtn.addEventListener('click', () => {
     isCounting = false;
     stopTimer();
-    
-    pushUpCount = 0;
-    startTime = null;
-    totalPauseDuration = 0;
-    pauseStart = null;
+
+    pushUpCount = 0; startTime = null;
+    totalPauseDuration = 0; pauseStart = null;
     isDownPosition = false;
 
-    counterElement.textContent = '0';
-    timerElement.textContent = '00:00:00';
-    ppmElement.textContent = '0';
-    
-    // UI: Reset
+    counterEl.textContent = '0';
+    timerEl.textContent   = '00:00';
+    ppmEl.textContent     = '0';
+
+    setAngleUI(null);
+    setPhase('', 'IDLE');
+    setLiveChip('off', 'OFFLINE');
+    setFeedback('', '');
+    updateRing();
+
     startBtn.disabled = false;
-    stopBtn.disabled = true;
-    stopBtn.classList.add('opacity-50');
+    stopBtn.disabled  = true;
+    startBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> Start Session`;
 
-    startBtn.classList.add('bg-green-600', 'hover:bg-green-500');
-    startBtn.classList.remove('bg-yellow-600', 'hover:bg-yellow-500');
-    startBtn.innerHTML = '<i data-feather="play" class="mr-2"></i> Start';
-    feather.replace();
-
-    // Stop and clean camera stream
     if (mpCamera && video.srcObject) {
         mpCamera.stop();
-        video.srcObject.getTracks().forEach(track => track.stop());
+        video.srcObject.getTracks().forEach(t => t.stop());
         video.srcObject = null;
         isCameraRunning = false;
     }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    video.classList.remove('video-hidden'); 
-    formFeedback.classList.add('hidden');
-    angleIndicator.classList.add('hidden');
+    video.classList.remove('video-hidden');
+    idleScreen.style.display = 'flex';
+    cameraFrame.classList.remove('is-live');
 });
 
-// Dummy listeners for theme/help buttons
-document.getElementById('theme-toggle').addEventListener('click', () => { console.log("Theme toggle clicked"); });
 document.getElementById('help-btn').addEventListener('click', () => {
-    alert("AYUSH PUSHUP COUNTER Help: Ensure full body is visible. The counter tracks the elbow angle (160° UP, 90° DOWN) for a rep.");
+    alert(
+        '📌 PushUp Counter — How to Use\n\n' +
+        '1. Stand sideways so your full arm is visible to the camera.\n' +
+        '2. Press Start Session — pose detection will load.\n' +
+        '3. Do push-ups — AI tracks your elbow angle live.\n\n' +
+        '📐 A rep is counted when:\n' +
+        '   • Elbow angle drops below 90°  → DOWN\n' +
+        '   • Then rises above 160°         → REP COUNTED\n\n' +
+        '💡 Tips: Good lighting + plain background = best accuracy.'
+    );
 });
+
+// Spin animation for loading state
+const s = document.createElement('style');
+s.textContent = `@keyframes spin{to{transform:rotate(360deg)}} .spin-icon{animation:spin .8s linear infinite}`;
+document.head.appendChild(s);
