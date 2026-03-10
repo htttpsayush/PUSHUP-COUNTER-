@@ -1,23 +1,17 @@
 <div align="center">
 
+# 💪 PushUp Counter
+
+### AI-Powered real-time push-up tracking using your webcam
+
+<br/>
+
 <img src="https://img.shields.io/badge/STATUS-LIVE-00d4ff?style=for-the-badge&labelColor=0a0a0a" />
 <img src="https://img.shields.io/badge/VERSION-1.0.0_BASIC-3b82f6?style=for-the-badge&labelColor=0a0a0a" />
 <img src="https://img.shields.io/badge/AI-MediaPipe_Pose-6366f1?style=for-the-badge&labelColor=0a0a0a" />
 <img src="https://img.shields.io/badge/PART_OF-FitAI_Suite-22d3a5?style=for-the-badge&labelColor=0a0a0a" />
 
 <br/><br/>
-
-```
-██████╗ ██╗   ██╗███████╗██╗  ██╗██╗   ██╗██████╗
-██╔══██╗██║   ██║██╔════╝██║  ██║██║   ██║██╔══██╗
-██████╔╝██║   ██║███████╗███████║██║   ██║██████╔╝
-██╔═══╝ ██║   ██║╚════██║██╔══██║██║   ██║██╔═══╝
-██║     ╚██████╔╝███████║██║  ██║╚██████╔╝██║
-╚═╝      ╚═════╝ ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝
-         AI-Powered Push-Up Counter v1.0
-```
-
-### 🏋️ Real-time push-up tracking using your webcam & Google MediaPipe Pose AI
 
 **[🧪 Basic Version — Live](https://pushup-counter-psi.vercel.app/)** &nbsp;·&nbsp; **[✨ Current Version — Coming Soon](#)** &nbsp;·&nbsp; **[🗺️ Roadmap](#-roadmap--part-of-something-bigger)**
 
