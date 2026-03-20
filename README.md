@@ -21,7 +21,7 @@
 
 ---
 
-## 📌 What is this?
+## 📌 What is this? 
 
 **PushUp Counter** is a browser-based fitness tracker that uses your webcam and AI pose detection to automatically count push-up repetitions in real time — no hardware, no app install, just open and go.
 
